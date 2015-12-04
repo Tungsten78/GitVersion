@@ -263,6 +263,8 @@ public class ReleaseBranchScenarios
 
             fixture.Repository.MakeCommits(1);
 
+            fixture.AssertFullSemver("1.1.0-unstable.1");
+
             fixture.Repository.CreateBranch("release-2.0.0");
             fixture.Repository.Checkout("release-2.0.0");
             fixture.Repository.MakeCommits(1);
@@ -273,16 +275,20 @@ public class ReleaseBranchScenarios
             fixture.Repository.ApplyTag("2.0.0-beta1");
 
             fixture.Repository.MakeCommits(1);
-
             fixture.AssertFullSemver("2.0.0-beta.2+2");
 
             //merge down to develop
             fixture.Repository.Checkout("develop");
             fixture.Repository.MergeNoFF("release-2.0.0", Constants.SignatureNow());
 
+            //!! develop bumped prematurely - we weren't done the release yet
+            fixture.AssertFullSemver("2.1.0-unstable.0");  //was 1.1.0-unstable.1 before the merge
+
             //but keep working on the release
             fixture.Repository.Checkout("release-2.0.0");
             fixture.AssertFullSemver("2.0.0-beta.2+2");
+            fixture.MakeACommit();
+            fixture.AssertFullSemver("2.0.0-beta.2+3");  //<---FAIL, was 2.0.0-beta.2+1 (reset)
         }
     }
 
